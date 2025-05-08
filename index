@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0iQ2FtYWRhXzIiIGRhdGEtbmFtZT0iQ2FtYWRhIDIiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgdmlld0JveD0iMCAwIDU0Mi45MyA0MDUuNzYiPgogIDxkZWZzPgogICAgPHN0eWxlPgogICAgICAuY2xzLTEgewogICAgICAgIGZpbGw6ICNlNjUzMDA7CiAgICAgIH0KCiAgICAgIC5jbHMtMiB7CiAgICAgICAgZmlsbDogI2ZmNjcxZDsKICAgICAgfQogICAgPC9zdHlsZT4KICA8L2RlZnM+CiAgPGcgaWQ9IkNhbWFkYV8xLTIiIGRhdGEtbmFtZT0iQ2FtYWRhIDEiPgogICAgPGc+CiAgICAgIDxjaXJjbGUgY2xhc3M9ImNscy0yIiBjeD0iMzEyLjA0IiBjeT0iODMuMzIiIHI9IjcxLjY4Ii8+CiAgICAgIDxyZWN0IGNsYXNzPSJjbHMtMSIgeD0iODkuMzciIHk9IjEyOS40NSIgd2lkdGg9Ijc4LjkyIiBoZWlnaHQ9IjI4NS40NyIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMjMwLjIgLTExLjM4KSByb3RhdGUoNDUpIi8+CiAgICAgIDxyZWN0IGNsYXNzPSJjbHMtMSIgeD0iLTEwLjciIHk9Ijg3LjY0IiB3aWR0aD0iMjgxLjI5IiBoZWlnaHQ9IjgwLjY4IiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxMjguNTUgLTU0LjQpIHJvdGF0ZSg0NSkiLz4KICAgICAgPHJlY3QgY2xhc3M9ImNscy0yIiB4PSIyMDcuMTIiIHk9IjI2NS44IiB3aWR0aD0iMjAxLjcxIiBoZWlnaHQ9IjgwLjQyIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgzMDYuNTggLTEyOC4xNCkgcm90YXRlKDQ1KSIvPgogICAgICA8cmVjdCBjbGFzcz0iY2xzLTIiIHg9IjM3OS4xNCIgeT0iMTQ1Ljg0IiB3aWR0aD0iNzkuMzgiIGhlaWdodD0iMjcxLjYyIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgzMjEuODMgLTIxMy42Nykgcm90YXRlKDQ1KSIvPgogICAgPC9nPgogIDwvZz4KPC9zdmc+">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gerador Avançado de Paletas</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chroma-js/2.1.0/chroma.min.js">
+
+    function gerarPaletas() {
+      const cor = document.getElementById("inputCor").value.trim();
+      let base;
+      try {
+        base = chroma(cor);
+      } catch {
+        alert("Cor inválida!");
+        return;
+      }
+
+      const tipos = {
+        'Monocromática': chroma.scale([base.brighten(2), base, base.darken(2)]).colors(5),
+        'Complementar': [base.hex(), base.set('hsl.h', '+180').hex()],
+        'Analógica': chroma.scale([base.set('hsl.h', '-30'), base, base.set('hsl.h', '+30')]).colors(5),
+        'Triádica': [base.hex(), base.set('hsl.h', '+120').hex(), base.set('hsl.h', '-120').hex()],
+        'Quadrada': [base.hex(), base.set('hsl.h', '+90').hex(), base.set('hsl.h', '+180').hex(), base.set('hsl.h', '+270').hex()],
+        'Neutras': ['#000', '#333', '#777', '#ccc', '#fff'],
+        'Vibrantes': ['#e74c3c','#e67e22','#f1c40f','#2ecc71','#3498db'],
+        'Pastel': ['#ffb3ba','#ffdfba','#ffffba','#baffc9','#bae1ff']
+      };
+
+      const modelos = {
+        'HEX': c => chroma(c).hex(),
+        'RGB': c => chroma(c).css(),
+        'HSL': c => chroma(c).css('hsl'),
+        'CMYK': c => {
+          const [r,g,b] = chroma(c).rgb();
+          const cmy = [1 - r/255, 1 - g/255, 1 - b/255];
+          const k = Math.min(...cmy);
+          const cmyk = cmy.map(v => Math.round(((v - k)/(1 - k || 1)) * 100));
+          return `CMYK(${cmyk.join('%, ')}%, ${Math.round(k*100)}%)`;
+        }
+      };
+
+      let html = "";
+      for (let modelo in modelos) {
+        for (let tipo in tipos) {
+          html += `<div class='paleta'>
+                    <h3 onclick='this.nextElementSibling.style.display = (this.nextElementSibling.style.display=="flex") ? "none" : "flex"'>
+                      ${modelo} - ${tipo}
+                      <span class='acoes'>
+                        <button onclick='baixarPaleta(this, "${modelo} - ${tipo}")'><i class='fas fa-download'></i></button>
+                      </span>
+                    </h3>
+                    <div class='cores'>`;
+          tipos[tipo].forEach(c => {
+            const valor = modelos[modelo](c);
+            html += `<div class='cor' style='background:${chroma(c).hex()}' onclick='copiarValor(this, "${valor}")'>${valor}</div>`;
+          });
+          html += "</div></div>";
+        }
+      }
+      document.getElementById("paletas").innerHTML = html;
+    }
+
+    function copiarValor(elem, texto) {
+      navigator.clipboard.writeText(texto);
+      const aviso = document.createElement("div");
+      aviso.className = "copiado";
+      aviso.innerText = "Copiado!";
+      elem.appendChild(aviso);
+      setTimeout(() => aviso.remove(), 1000);
+    }
+
+    function exportarSelecionadasImagem() {
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
+      const selecionadas = document.querySelectorAll(".cores");
+      let y = 10, altura = selecionadas.length * 100;
+      canvas.width = 1000;
+      canvas.height = altura;
+      ctx.fillStyle = "white";
+      ctx.fillRect(0, 0, 1000, altura);
+      ctx.font = "14px Inter";
+      selecionadas.forEach(g => {
+        if (g.style.display === "flex") {
+          g.querySelectorAll(".cor").forEach((c, i) => {
+            ctx.fillStyle = c.style.backgroundColor;
+            ctx.fillRect(20 + i * 130, y, 100, 50);
+            ctx.strokeStyle = "black";
+            ctx.strokeRect(20 + i * 130, y, 100, 50);
+            ctx.fillStyle = "black";
+            ctx.fillText(c.innerText, 20 + i * 130 + 5, y + 65);
+          });
+          y += 80;
+        }
+      });
+      const link = document.createElement("a");
+      link.download = "paletas.png";
+      link.href = canvas.toDataURL();
+      link.click();
+    }
+
+    function exportarSelecionadasPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      let y = 10;
+      document.querySelectorAll(".paleta").forEach(p => {
+        const bloco = p.querySelector(".cores");
+        if (bloco.style.display === "flex") {
+          const titulo = p.querySelector("h3").innerText;
+          doc.text(titulo, 10, y);
+          y += 10;
+          bloco.querySelectorAll(".cor").forEach((c, i) => {
+            const x = 10 + (i * 50);
+            doc.setFillColor(c.style.backgroundColor);
+            doc.rect(x, y, 40, 20, 'F');
+            doc.setTextColor(0);
+            doc.text(c.innerText, x, y + 30);
+          });
+          y += 50;
+        }
+      });
+      doc.save("paletas.pdf");
+    }
+    </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js">
+
+    function gerarPaletas() {
+      const cor = document.getElementById("inputCor").value.trim();
+      let base;
+      try {
+        base = chroma(cor);
+      } catch {
+        alert("Cor inválida!");
+        return;
+      }
+
+      const tipos = {
+        'Monocromática': chroma.scale([base.brighten(2), base, base.darken(2)]).colors(5),
+        'Complementar': [base.hex(), base.set('hsl.h', '+180').hex()],
+        'Analógica': chroma.scale([base.set('hsl.h', '-30'), base, base.set('hsl.h', '+30')]).colors(5),
+        'Triádica': [base.hex(), base.set('hsl.h', '+120').hex(), base.set('hsl.h', '-120').hex()],
+        'Quadrada': [base.hex(), base.set('hsl.h', '+90').hex(), base.set('hsl.h', '+180').hex(), base.set('hsl.h', '+270').hex()],
+        'Neutras': ['#000', '#333', '#777', '#ccc', '#fff'],
+        'Vibrantes': ['#e74c3c','#e67e22','#f1c40f','#2ecc71','#3498db'],
+        'Pastel': ['#ffb3ba','#ffdfba','#ffffba','#baffc9','#bae1ff']
+      };
+
+      const modelos = {
+        'HEX': c => chroma(c).hex(),
+        'RGB': c => chroma(c).css(),
+        'HSL': c => chroma(c).css('hsl'),
+        'CMYK': c => {
+          const [r,g,b] = chroma(c).rgb();
+          const cmy = [1 - r/255, 1 - g/255, 1 - b/255];
+          const k = Math.min(...cmy);
+          const cmyk = cmy.map(v => Math.round(((v - k)/(1 - k || 1)) * 100));
+          return `CMYK(${cmyk.join('%, ')}%, ${Math.round(k*100)}%)`;
+        }
+      };
+
+      let html = "";
+      for (let modelo in modelos) {
+        for (let tipo in tipos) {
+          html += `<div class='paleta'>
+                    <h3 onclick='this.nextElementSibling.style.display = (this.nextElementSibling.style.display=="flex") ? "none" : "flex"'>
+                      ${modelo} - ${tipo}
+                      <span class='acoes'>
+                        <button onclick='baixarPaleta(this, "${modelo} - ${tipo}")'><i class='fas fa-download'></i></button>
+                      </span>
+                    </h3>
+                    <div class='cores'>`;
+          tipos[tipo].forEach(c => {
+            const valor = modelos[modelo](c);
+            html += `<div class='cor' style='background:${chroma(c).hex()}' onclick='copiarValor(this, "${valor}")'>${valor}</div>`;
+          });
+          html += "</div></div>";
+        }
+      }
+      document.getElementById("paletas").innerHTML = html;
+    }
+
+    function copiarValor(elem, texto) {
+      navigator.clipboard.writeText(texto);
+      const aviso = document.createElement("div");
+      aviso.className = "copiado";
+      aviso.innerText = "Copiado!";
+      elem.appendChild(aviso);
+      setTimeout(() => aviso.remove(), 1000);
+    }
+
+    function exportarSelecionadasImagem() {
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
+      const selecionadas = document.querySelectorAll(".cores");
+      let y = 10, altura = selecionadas.length * 100;
+      canvas.width = 1000;
+      canvas.height = altura;
+      ctx.fillStyle = "white";
+      ctx.fillRect(0, 0, 1000, altura);
+      ctx.font = "14px Inter";
+      selecionadas.forEach(g => {
+        if (g.style.display === "flex") {
+          g.querySelectorAll(".cor").forEach((c, i) => {
+            ctx.fillStyle = c.style.backgroundColor;
+            ctx.fillRect(20 + i * 130, y, 100, 50);
+            ctx.strokeStyle = "black";
+            ctx.strokeRect(20 + i * 130, y, 100, 50);
+            ctx.fillStyle = "black";
+            ctx.fillText(c.innerText, 20 + i * 130 + 5, y + 65);
+          });
+          y += 80;
+        }
+      });
+      const link = document.createElement("a");
+      link.download = "paletas.png";
+      link.href = canvas.toDataURL();
+      link.click();
+    }
+
+    function exportarSelecionadasPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      let y = 10;
+      document.querySelectorAll(".paleta").forEach(p => {
+        const bloco = p.querySelector(".cores");
+        if (bloco.style.display === "flex") {
+          const titulo = p.querySelector("h3").innerText;
+          doc.text(titulo, 10, y);
+          y += 10;
+          bloco.querySelectorAll(".cor").forEach((c, i) => {
+            const x = 10 + (i * 50);
+            doc.setFillColor(c.style.backgroundColor);
+            doc.rect(x, y, 40, 20, 'F');
+            doc.setTextColor(0);
+            doc.text(c.innerText, x, y + 30);
+          });
+          y += 50;
+        }
+      });
+      doc.save("paletas.pdf");
+    }
+    </script>
+  <style>
+    * { box-sizing: border-box; }
+    body.tema-claro {
+      background: #f9fbfd;
+      color: #333;
+    }
+    body.tema-escuro {
+      background: #1e1e1e;
+      color: #f5f5f5;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+      transition: background 0.3s, color 0.3s;
+      padding: 1rem;
+    }
+    input, button, select {
+      padding: 0.5rem;
+      font-size: 1rem;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    body.tema-escuro input,
+    body.tema-escuro select {
+      background: #2b2b2b;
+      color: #fff;
+      border-color: #555;
+    }
+    body.tema-escuro button {
+      background: #2980b9;
+    }
+    button {
+      background-color: #3498db;
+      color: white;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    button:hover {
+      background-color: #2c80c9;
+    }
+    .container {
+      max-width: 1000px;
+      margin: auto;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+    .paleta {
+      margin-bottom: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      overflow: hidden;
+      background: white;
+    }
+    body.tema-escuro .paleta {
+      background: #2a2a2a;
+      border-color: #444;
+    }
+    .paleta h3 {
+      margin: 0;
+      padding: 0.8rem;
+      background: #eee;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    body.tema-escuro .paleta h3 {
+      background: #3a3a3a;
+      color: #f5f5f5;
+    }
+    .paleta .acoes {
+      display: flex;
+      gap: 0.5rem;
+    }
+    .cores {
+      display: none;
+      padding: 1rem;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .cor {
+      flex: 1 1 100px;
+      height: 80px;
+      border-radius: 6px;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 0.75rem;
+      text-align: center;
+      padding: 0.2rem;
+      cursor: pointer;
+      position: relative;
+    }
+    .copiado {
+      position: absolute;
+      bottom: 2px;
+      font-size: 0.6rem;
+      background: rgba(0,0,0,0.6);
+      padding: 2px 4px;
+      border-radius: 3px;
+    }
+    .actions, .header-actions {
+      margin: 1rem 0;
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    #temaToggle {
+      margin-left: auto;
+    }
+  </style>
+</head>
+<body class="tema-claro">
+  <div class="container">
+    <header>
+      <h1>🎨 Gerador Avançado de Paletas</h1>
+      <p>Digite uma cor (HSL, HEX ou RGB) e veja a mágica acontecer</p>
+    </header>
+
+    <div class="header-actions">
+      <input type="text" id="inputCor" placeholder="Ex: #ff6600 ou rgb(100,200,150) ou navy" style="width:100%; max-width:500px;">
+      <button onclick="toggleTema()"><i class="fas fa-adjust"></i> Modo</button>
+    </div>
+
+    <div class="actions">
+      <button onclick="gerarPaletas()"><i class="fas fa-magic"></i> Gerar Paletas</button>
+      <button onclick="exportarSelecionadasImagem()"><i class="fas fa-image"></i> Salvar PNG</button>
+      <button onclick="exportarSelecionadasPDF()"><i class="fas fa-file-pdf"></i> Salvar PDF</button>
+    </div>
+
+    <div id="paletas"></div>
+    <canvas id="canvas" style="display:none"></canvas>
+  </div>
+
+  <script>
+    let modoClaro = true;
+    function toggleTema() {
+      modoClaro = !modoClaro;
+      document.body.className = modoClaro ? 'tema-claro' : 'tema-escuro';
+    }
+  
+
+    function gerarPaletas() {
+      const cor = document.getElementById("inputCor").value.trim();
+      let base;
+      try {
+        base = chroma(cor);
+      } catch {
+        alert("Cor inválida!");
+        return;
+      }
+
+      const tipos = {
+        'Monocromática': chroma.scale([base.brighten(2), base, base.darken(2)]).colors(5),
+        'Complementar': [base.hex(), base.set('hsl.h', '+180').hex()],
+        'Analógica': chroma.scale([base.set('hsl.h', '-30'), base, base.set('hsl.h', '+30')]).colors(5),
+        'Triádica': [base.hex(), base.set('hsl.h', '+120').hex(), base.set('hsl.h', '-120').hex()],
+        'Quadrada': [base.hex(), base.set('hsl.h', '+90').hex(), base.set('hsl.h', '+180').hex(), base.set('hsl.h', '+270').hex()],
+        'Neutras': ['#000', '#333', '#777', '#ccc', '#fff'],
+        'Vibrantes': ['#e74c3c','#e67e22','#f1c40f','#2ecc71','#3498db'],
+        'Pastel': ['#ffb3ba','#ffdfba','#ffffba','#baffc9','#bae1ff']
+      };
+
+      const modelos = {
+        'HEX': c => chroma(c).hex(),
+        'RGB': c => chroma(c).css(),
+        'HSL': c => chroma(c).css('hsl'),
+        'CMYK': c => {
+          const [r,g,b] = chroma(c).rgb();
+          const cmy = [1 - r/255, 1 - g/255, 1 - b/255];
+          const k = Math.min(...cmy);
+          const cmyk = cmy.map(v => Math.round(((v - k)/(1 - k || 1)) * 100));
+          return `CMYK(${cmyk.join('%, ')}%, ${Math.round(k*100)}%)`;
+        }
+      };
+
+      let html = "";
+      for (let modelo in modelos) {
+        for (let tipo in tipos) {
+          html += `<div class='paleta'>
+                    <h3 onclick='this.nextElementSibling.style.display = (this.nextElementSibling.style.display=="flex") ? "none" : "flex"'>
+                      ${modelo} - ${tipo}
+                      <span class='acoes'>
+                        <button onclick='baixarPaleta(this, "${modelo} - ${tipo}")'><i class='fas fa-download'></i></button>
+                      </span>
+                    </h3>
+                    <div class='cores'>`;
+          tipos[tipo].forEach(c => {
+            const valor = modelos[modelo](c);
+            html += `<div class='cor' style='background:${chroma(c).hex()}' onclick='copiarValor(this, "${valor}")'>${valor}</div>`;
+          });
+          html += "</div></div>";
+        }
+      }
+      document.getElementById("paletas").innerHTML = html;
+    }
+
+    function copiarValor(elem, texto) {
+      navigator.clipboard.writeText(texto);
+      const aviso = document.createElement("div");
+      aviso.className = "copiado";
+      aviso.innerText = "Copiado!";
+      elem.appendChild(aviso);
+      setTimeout(() => aviso.remove(), 1000);
+    }
+
+    function exportarSelecionadasImagem() {
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
+      const selecionadas = document.querySelectorAll(".cores");
+      let y = 10, altura = selecionadas.length * 100;
+      canvas.width = 1000;
+      canvas.height = altura;
+      ctx.fillStyle = "white";
+      ctx.fillRect(0, 0, 1000, altura);
+      ctx.font = "14px Inter";
+      selecionadas.forEach(g => {
+        if (g.style.display === "flex") {
+          g.querySelectorAll(".cor").forEach((c, i) => {
+            ctx.fillStyle = c.style.backgroundColor;
+            ctx.fillRect(20 + i * 130, y, 100, 50);
+            ctx.strokeStyle = "black";
+            ctx.strokeRect(20 + i * 130, y, 100, 50);
+            ctx.fillStyle = "black";
+            ctx.fillText(c.innerText, 20 + i * 130 + 5, y + 65);
+          });
+          y += 80;
+        }
+      });
+      const link = document.createElement("a");
+      link.download = "paletas.png";
+      link.href = canvas.toDataURL();
+      link.click();
+    }
+
+    function exportarSelecionadasPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      let y = 10;
+      document.querySelectorAll(".paleta").forEach(p => {
+        const bloco = p.querySelector(".cores");
+        if (bloco.style.display === "flex") {
+          const titulo = p.querySelector("h3").innerText;
+          doc.text(titulo, 10, y);
+          y += 10;
+          bloco.querySelectorAll(".cor").forEach((c, i) => {
+            const x = 10 + (i * 50);
+            doc.setFillColor(c.style.backgroundColor);
+            doc.rect(x, y, 40, 20, 'F');
+            doc.setTextColor(0);
+            doc.text(c.innerText, x, y + 30);
+          });
+          y += 50;
+        }
+      });
+      doc.save("paletas.pdf");
+    }
+    </script>
+</body>
+</html>
